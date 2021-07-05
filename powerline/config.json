@@ -1,0 +1,14 @@
+{
+
+	"common": {
+		"term_truecolor": false,
+        "log_level": "DEBUG",
+        "log_file": "~/.powerline.log"
+	},
+	"ext": {
+		"tmux": {
+			"colorscheme": "default",
+			"theme": "default"
+		}
+	}
+}
