@@ -9,10 +9,16 @@ fish_add_path /home/stonecharioteer/.cargo/bin
 
 fish_add_path /home/stonecharioteer/go/bin
 fish_add_path /home/stonecharioteer/code/tools/go/bin
-
+#fish_add_path /home/stonecharioteer/code/tools/node/bin
+fish_add_path /home/stonecharioteer/code/tools/redis/src/
+fish_add_path /home/stonecharioteer/code/tools/kui/
+fish_add_path /home/stonecharioteer/.krew/bin
+set PYTHONDONTWRITEBYTECODE 1
 # Aliases
 alias vim='nvim'
-
+alias tmux='tmux -u'
+# export JAVA_HOME='/usr/lib/jvm/java-8-openjdk/jre'
+export JAVA_HOME='/usr/lib/jvm/java-16-openjdk/'
 # exa aliases
 # First run `cargo install exa`
 # see https://github.com/DarrinTisdale/zsh-aliases-exa
@@ -55,6 +61,19 @@ alias gup='git pull --rebase'
 alias gp='git push'
 #compdef _git gp=git-push
 alias gd='git diff'
+alias gd='git diff -w'
+
+alias glg='git log --stat'
+alias glgg='git log --graph'
+alias glgga='git log --graph --decorate --all'
+alias glgm='git log --graph --max-count=10'
+alias glgp='git log --stat -p'
+alias glo='git log --oneline --decorate'
+alias glog='git log --oneline --decorate --graph'
+alias gloga='git log --oneline --decorate --graph --all'
+alias glol='git log --graph --pretty='\''%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'\'' --abbrev-commit'
+alias glola='git log --graph --pretty='\''%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'\'' --abbrev-commit --all'
+
 
 function gdv
   git diff -w $argv | view -
@@ -197,10 +216,28 @@ alias gunwip='git log -n 1 | grep -q -c wip; and git reset HEAD~1'
 
 # turn on vi bindings
 fish_vi_key_bindings
+fzf_key_bindings
 
+# color customizations
+
+set fish_color_command white --italics
 ## Prompt and other configs
 # Cargo install zoxide
 zoxide init fish | source
 # cargo install starship
 starship init fish | source
+#fortune | cowsay | lolcat
+
+# exercism
+
+source ~/code/tools/exercism-cli/shell/exercism.fish
+
+# Wasmer
+export WASMER_DIR="/home/stonecharioteer/.wasmer"
+[ -s "$WASMER_DIR/wasmer.sh" ] && source "$WASMER_DIR/wasmer.sh"
+alias hadolint='docker run --rm -i hadolint/hadolint < $1'
+
+function keeb_disable
+    xinput list | grep -i 'at translated set 2 keyboard' | cut -d'=' -f2 | cut -d\t -f1 | xargs xinput float
+end
 
