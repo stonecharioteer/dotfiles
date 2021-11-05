@@ -1,0 +1,1 @@
+/home/stonecharioteer/.fzf/shell/key-bindings.fish
