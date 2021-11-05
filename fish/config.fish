@@ -3,17 +3,19 @@
 eval /home/stonecharioteer/code/tools/miniconda3/bin/conda "shell.fish" "hook" $argv | source
 # <<< conda initialize <<<
 
-fish_add_path /usr/local/pgsql/bin/
+# fish_add_path /usr/local/pgsql/bin/
 fish_add_path /home/stonecharioteer/.local/bin
 fish_add_path /home/stonecharioteer/.cargo/bin
-
-fish_add_path /home/stonecharioteer/go/bin
-fish_add_path /home/stonecharioteer/code/tools/go/bin
+# Install rvm from https://rvm.io/
+fish_add_path /home/stonecharioteer/.rvm/bin
+fish_add_path /usr/local/go/bin
 #fish_add_path /home/stonecharioteer/code/tools/node/bin
-fish_add_path /home/stonecharioteer/code/tools/redis/src/
+# fish_add_path /home/stonecharioteer/code/tools/redis/src/
 fish_add_path /home/stonecharioteer/code/tools/kui/
 fish_add_path /home/stonecharioteer/.krew/bin
-set PYTHONDONTWRITEBYTECODE 1
+fish_add_path /home/stonecharioteer/tools/kui/
+export PYTHONDONTWRITEBYTECODE='1'
+export EDITOR='nvim'
 # Aliases
 alias vim='nvim'
 alias tmux='tmux -u'
@@ -228,16 +230,21 @@ zoxide init fish | source
 starship init fish | source
 #fortune | cowsay | lolcat
 
-# exercism
+# install fundle if it isn't installed
+if not functions -q fundle; eval (curl -sfL https://git.io/fundle-install); end
+# install bass
+fundle plugin 'edc/bass'
+fundle plugin 'tuvistavie/fish-fastdir'
+fundle init
+# run `fundle install` when setting things up.
 
-source ~/code/tools/exercism-cli/shell/exercism.fish
-
-# Wasmer
-export WASMER_DIR="/home/stonecharioteer/.wasmer"
-[ -s "$WASMER_DIR/wasmer.sh" ] && source "$WASMER_DIR/wasmer.sh"
+## Wasmer
+# export WASMER_DIR="/home/stonecharioteer/.wasmer"
+# [ -s "$WASMER_DIR/wasmer.sh" ] && source "$WASMER_DIR/wasmer.sh"
 alias hadolint='docker run --rm -i hadolint/hadolint < $1'
 
-function keeb_disable
-    xinput list | grep -i 'at translated set 2 keyboard' | cut -d'=' -f2 | cut -d\t -f1 | xargs xinput float
-end
 
+load_nvm >> /dev/null
+rvm use ruby >> /dev/null
+export ANSIBLE_DEPRECATION_WARNINGS=0
+export HISTCONTROL=ignoreboth:erasedups # ignore any commands which have a space in the beginning when writing to history
