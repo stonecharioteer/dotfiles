@@ -3,7 +3,9 @@ add_newline = true
 
 # Replace the "❯" symbol in the prompt with "➜"
 [character]                            # The name of the module we are configuring is "character"
-success_symbol = "[➜](bold green)"     # The "success_symbol" segment is being set to "➜" with the color "bold green"
+success_symbol = "[✎](bold green)"     # The "success_symbol" segment is being set to "➜" with the color "bold green"
+error_symbol = "[☠](bold red) "
+vicmd_symbol = "[✐](bold green) "
 
 [ruby]
 disabled = true
@@ -19,3 +21,13 @@ disabled = false
 
 [time]
 disabled = false
+
+[battery]
+full_symbol = "🔋 "
+charging_symbol = "⚡️ "
+discharging_symbol = "💀 "
+
+[[battery.display]]
+threshold = 30
+style = "bold red"
+
