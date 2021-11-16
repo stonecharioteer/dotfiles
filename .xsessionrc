@@ -1,7 +1,8 @@
 # only do this if running qtile
-compton &
-nitrogen --restore &
-xfce4-power-manager &
-xrandr --output DisplayPort-1 --left-of eDP
-xrandr --output HDMI-A-0 --right-of eDP
-xrandr --output eDP --primary
+if pgrep qtile; then
+    compton &
+    nitrogen --restore &
+    xfce4-power-manager &
+    /opt/qtile/bin/autorandr
+fi
+
