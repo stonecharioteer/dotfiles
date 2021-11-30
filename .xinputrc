@@ -1,1 +1,7 @@
-xinput set-props 13 299 1
+SYNAPTICS_TOUCHPAD_ID=`xinput list | grep -i 'Synaptics TouchPad' | cut -d'=' -f2 | cut -d$'\t' -f1`
+xinput set-prop $SYNAPTICS_TOUCHPAD_ID 'libinput Tapping Enabled' 1
+echo "Synaptics Touchpad ID is $SYNAPTICS_TOUCHPAD_ID"
+MX_ERGO_ID=`xinput list | grep -i 'MX Ergo' | grep -i pointer | cut -d'=' -f2 | cut -d$'\t' -f1`
+echo "Logitech MX Ergo ID is $MX_ERGO_ID"
+xinput set-prop $MX_ERGO_ID  'libinput Scroll Method Enabled' 0, 0, 1
+xinput set-prop $MX_ERGO_ID  'libinput Button Scrolling Button' 2
