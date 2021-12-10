@@ -1,19 +1,19 @@
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
-eval /home/stonecharioteer/code/tools/miniconda3/bin/conda "shell.fish" "hook" $argv | source
+eval $HOME/code/tools/miniconda3/bin/conda "shell.fish" "hook" $argv | source
 # <<< conda initialize <<<
 
 # fish_add_path /usr/local/pgsql/bin/
-fish_add_path /home/stonecharioteer/.local/bin
-fish_add_path /home/stonecharioteer/.cargo/bin
+fish_add_path $HOME/.local/bin
+fish_add_path $HOME/.cargo/bin
 # Install rvm from https://rvm.io/
-fish_add_path /home/stonecharioteer/.rvm/bin
+fish_add_path $HOME/.rvm/bin
+export GOPATH="$HOME/.golang/"
 fish_add_path /usr/local/go/bin
-#fish_add_path /home/stonecharioteer/code/tools/node/bin
-# fish_add_path /home/stonecharioteer/code/tools/redis/src/
-fish_add_path /home/stonecharioteer/code/tools/kui/
-fish_add_path /home/stonecharioteer/.krew/bin
-fish_add_path /home/stonecharioteer/tools/kui/
+fish_add_path $HOME/.golang/bin/
+fish_add_path $HOME/code/tools/kui/
+fish_add_path $HOME/.krew/bin
+fish_add_path $HOME/tools/kui/
 export PYTHONDONTWRITEBYTECODE='1'
 export EDITOR='nvim'
 # Aliases
@@ -239,7 +239,7 @@ fundle init
 # run `fundle install` when setting things up.
 
 ## Wasmer
-# export WASMER_DIR="/home/stonecharioteer/.wasmer"
+# export WASMER_DIR="$HOME/.wasmer"
 # [ -s "$WASMER_DIR/wasmer.sh" ] && source "$WASMER_DIR/wasmer.sh"
 alias hadolint='docker run --rm -i hadolint/hadolint < $1'
 
@@ -248,3 +248,13 @@ load_nvm >> /dev/null
 rvm use ruby >> /dev/null
 export ANSIBLE_DEPRECATION_WARNINGS=0
 export HISTCONTROL=ignoreboth:erasedups # ignore any commands which have a space in the beginning when writing to history
+
+
+#export LESS_TERMCAP_mb=$'\e[1;32m'
+#export LESS_TERMCAP_md=$'\e[1;32m'
+#export LESS_TERMCAP_me=$'\e[0m'
+#export LESS_TERMCAP_se=$'\e[0m'
+#export LESS_TERMCAP_so=$'\e[01;33m'
+#export LESS_TERMCAP_ue=$'\e[0m'
+#export LESS_TERMCAP_us=$'\e[1;4;31m'
+direnv hook fish | source
