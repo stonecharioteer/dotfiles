@@ -1,8 +1,5 @@
-# only do this if running qtile
-if pgrep qtile; then
-    compton &
-    nitrogen --restore &
-    xfce4-power-manager &
-    /opt/qtile/bin/autorandr
-fi
-
+/opt/qtile/bin/autorandr
+compton &
+xfce4-power-manager &
+dunst &
+nitrogen --restore
