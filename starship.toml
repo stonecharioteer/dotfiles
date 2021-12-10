@@ -31,3 +31,10 @@ discharging_symbol = "💀 "
 threshold = 30
 style = "bold red"
 
+[status]
+style = "bg:red"
+symbol = "🔴"
+format = '[\[$symbol ($status) $common_meaning$signal_name$maybe_int\]]($style) '
+map_symbol = true
+disabled = false
+
