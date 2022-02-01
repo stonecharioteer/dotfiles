@@ -1,8 +1,10 @@
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
-eval $HOME/code/tools/miniconda3/bin/conda "shell.fish" "hook" $argv | source
+# eval $HOME/code/tools/miniconda3/bin/conda "shell.fish" "hook" $argv | source
+# source $HOME/.asdf/asdf.fish
 # <<< conda initialize <<<
 
+set -U fish_greeting "🐟"
 # fish_add_path /usr/local/pgsql/bin/
 fish_add_path $HOME/.local/bin
 fish_add_path $HOME/.cargo/bin
@@ -14,6 +16,24 @@ fish_add_path $HOME/.golang/bin/
 fish_add_path $HOME/code/tools/kui/
 fish_add_path $HOME/.krew/bin
 fish_add_path $HOME/tools/kui/
+fish_add_path $HOME/code/tools/git-fuzzy/bin
+fish_add_path $HOME/code/tools/redis/src
+
+export GF_GREP_COLOR='1;30;48;5;15'
+export GF_PREFERRED_PAGER="delta --theme=gruvbox --highlight-removed -w __WIDTH__"
+export GF_LOG_MENU_PARAMS='--pretty="%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset" --topo-order'
+# set them for `git fuzzy` only
+export GF_BAT_STYLE=changes
+export GF_BAT_THEME=zenburn
+
+# bzip2
+export LDFLAGS="-L/usr/local/opt/zlib/lib -L/usr/local/opt/bzip2/lib"
+export CPPFLAGS="-I/usr/local/opt/zlib/include -I/usr/local/opt/bzip2/include"
+
+# OR set these globally for all `bat` instances
+# export BAT_STYLE=changes
+# export BAT_THEME=zenburn
+
 export PYTHONDONTWRITEBYTECODE='1'
 export EDITOR='nvim'
 # Aliases
@@ -258,3 +278,29 @@ export HISTCONTROL=ignoreboth:erasedups # ignore any commands which have a space
 #export LESS_TERMCAP_ue=$'\e[0m'
 #export LESS_TERMCAP_us=$'\e[1;4;31m'
 direnv hook fish | source
+spt --completions fish | source
+
+abbr --add mux "tmuxinator"
+abbr --add t "todoist"
+abbr --add g "git"
+abbr --add tlms "todoist list | grep -i 'merkle science'"
+abbr --add tams "todoist add --project-name 'Merkle Science'"
+abbr --add tns "tmux new-session -s"
+abbr --add xsc "xclip -selection clipboard"
+
+# pyenv
+#pyenv init - | source 
+#pyenv init --path | source
+#pyenv virtualenv-init - | source */
+
+export PAGER=most
+
+function __trigger_prompt_sync --on-event fish_prompt
+  set -U __prompt_sync $PWD
+end
+
+function __prompt_sync --on-variable __prompt_sync
+  test $PWD = $__prompt_sync; or return
+  commandline -f repaint
+end
+
