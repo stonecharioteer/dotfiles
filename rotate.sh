@@ -1,0 +1,167 @@
+#!/bin/sh
+
+# This script facilitates both the actual rotation of the display and digitizer as well as
+# optionally enabling a daemon to monitor for orientation changes and respond accordingly.
+#
+# References:
+#
+# * https://askubuntu.com/a/405840/527080
+# * https://linuxappfinder.com/blog/auto_screen_rotation_in_ubuntu
+# * https://wiki.ubuntu.com/X/InputCoordinateTransformation
+
+
+DIGITIZER_GREP="$([ -n "$DIGITIZER_GREP" ] && echo "$DIGITIZER_GREP" || echo "wacom")"
+ORIENTATION=
+VERBOSE="$([ -n "$VERBOSE" ] && echo "$VERBOSE" || echo "0")"
+VERSION=::VERSION::
+ENABLE_DISABLE=
+WATCH=0
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    # Options
+    --verbose) VERBOSE=1; shift;;
+    --version) echo "ks-rotate-display v$VERSION"; exit;;
+    -h|--help) man ks-rotate-display; exit;;
+    -d|--digitizer) DIGITIZER_GREP="$2"; shift 2;;
+
+    # Commands
+    watch) WATCH=1; shift; break;;
+    enable|disable) ENABLE_DISABLE="$1"; shift; break;;
+    normal|left-up|bottom-up|right-up)
+      if [ -z "$ORIENTATION" ]; then
+        ORIENTATION="$1"
+        shift
+      else
+        >&2 echo "E: Orientation already set to '$ORIENTATION'. Can't pass orientation twice.'"
+        exit 1
+      fi
+    ;;
+    *)
+      >&2 echo "E: Unknown option '$1'"
+      exit 2
+    ;;
+  esac
+done
+
+# If we're enabling/disabling, do that
+if [ -n "$ENABLE_DISABLE" ]; then
+    if [ -n "$SUDO_USER" ]; then
+        >&2 echo "It appears as though you've run this command using sudo. This will not work, since this is a user-level service. Please run the command without sudo instead."
+        exit 3
+    fi
+
+    userdir="$HOME/.config/systemd/user"
+
+    if [ "$ENABLE_DISABLE" = "enable" ]; then
+        mkdir -p "$userdir"
+        cp /usr/share/ks-rotate-display/ks-rotate-display.service "$userdir/"
+        systemctl --user enable --now ks-rotate-display
+    else
+        systemctl --user disable --now ks-rotate-display || true
+    fi
+
+    exit
+fi
+
+# If we're in watch mode, just set it up and daemonize
+if [ "$WATCH" -eq 1 ]; then
+    export VERBOSE
+    LAST_PID=
+    monitor-sensor | while read val; do
+        if echo "$val" | grep -q 'orientation changed'; then
+            if [ -n "$LAST_PID" ] && ps -p"$LAST_PID" | grep -q "$LAST_PID"; then
+                kill "$LAST_PID"
+            fi
+            export val
+            bash -c '
+                [ "$VERBOSE" -eq 1 ] && >&2 echo "ORIENTATION CHANGED: $val"
+                perl -e "select(undef,undef,undef,0.7);"
+                [ "$VERBOSE" -eq 1 ] && >&2 echo "Activating"
+                ORIENTATION="$(echo "$val" | sed -r "s/^.*: (.*)\$/\1/g")"
+                [ "$VERBOSE" -eq 1 ] && >&2 echo "Changing orientation to $ORIENTATION"
+                ks rotate-display "$ORIENTATION"
+            ' &
+            LAST_PID=$!
+        fi
+    done
+    exit
+fi
+
+if [ -z "$ORIENTATION" ]; then
+  >&2 echo "E: No orientation provided. Orientation should be one of the following options:"
+  >&2 echo
+  >&2 echo "  * normal - Normal display"
+  >&2 echo "  * left-up - The normal left side of the screen is now the top"
+  >&2 echo "  * right-up - The normal right side of the screen is now the top"
+  >&2 echo "  * bottom-up - The normal bottom of the screen is now the top"
+  >&2 echo
+  exit 3
+fi
+
+# If the built-in display is not connected, just exit
+[ -z "$BUILTIN_REGEXP" ] && BUILTIN_REGEXP="^eDP-1"
+[ "$VERBOSE" -eq 1 ] && >&2 echo "Using regexp '$BUILTIN_REGEXP' to find built-in display"
+if ! xrandr | grep -E "$BUILTIN_REGEXP" | grep -q " connected "; then
+    >&2 echo "Laptop display (identified by regexp '$BUILTIN_REGEXP') not connected. Exiting."
+    exit
+fi
+
+[ -z "$BUILTIN_NAME" ] && BUILTIN_NAME="$(xrandr | grep -E "$BUILTIN_REGEXP" | grep " connected " | sed -r 's/^([^ ]+).*$/\1/')"
+[ "$VERBOSE" -eq 1 ] && >&2 echo "Found built-in display with ID '$BUILTIN_NAME'"
+if [ -z "$BUILTIN_NAME" ]; then
+    >&2 echo "It appears as though the laptop display could not be properly identified. This is an unlikely error. Exiting."
+    exit 1
+fi
+
+if [ "$ORIENTATION" = "left-up" ]; then
+  ROTATION="left"
+  COORDS="0 -1 1 1 0 0 0 0 1"
+elif [ "$ORIENTATION" = "right-up" ]; then
+  ROTATION="right"
+  COORDS="0 1 0 -1 0 1 0 0 1"
+elif [ "$ORIENTATION" = "bottom-up" ]; then
+  ROTATION="inverted"
+  COORDS="-1 0 1 0 -1 1 0 0 1"
+elif [ "$ORIENTATION" = "normal" ]; then
+  ROTATION="normal"
+  COORDS="0 0 0 0 0 0 0 0 0"
+fi
+
+# Rotate display
+[ "$VERBOSE" -eq 1 ] && >&2 echo "Rotating display '$BUILTIN_NAME' to $ROTATION"
+xrandr --output "$BUILTIN_NAME" --rotate "$ROTATION"
+
+# Now try to rotate digitizers, if present
+DEVICES="$(xinput -list | grep -Ei "$DIGITIZER_GREP" | sed -r 's/^.*↳ ([^\t]+).*$/\1/')"
+
+DEVICES="$(xinput -list | grep -Ei wacom | cut -d= -f2| cut -f1)"
+if [ "$(echo -n "$DEVICES" | wc -l)" -eq 0 ]; then
+    >&2 echo "No digitizer devices found on this machine. Not rotating digitizers. Exiting."
+    exit
+elif [ "$VERBOSE" -eq 1 ]; then
+    >&2 echo "Found $(echo "$DEVICES" | wc -l) Wacom devices"
+fi
+
+echo "$DEVICES" | while read D; do
+    [ "$VERBOSE" -eq 1 ] && >&2 echo "Resetting coordinates for device '$D'"
+    xinput set-prop "$D" --type=float "Coordinate Transformation Matrix" $COORDS
+    xinput map-to-output "$D" $BUILTIN_REGEXP
+done
+
+# Activate hook
+POST_HOOK_PATH="$KS_PLUGIN_PATH/ks-rotate-display-post-rotate"
+[ "$VERBOSE" -eq 1 ] && >&2 echo "Searching for hook at $POST_HOOK_PATH"
+if [ -e "$POST_HOOK_PATH" ]; then
+    if [ -x "$POST_HOOK_PATH" ]; then
+        [ "$VERBOSE" -eq 1 ] && \
+            >&2 echo "Exporting DEVICES DIGITIZER_GREP ORIENTATION ROTATION COORDS variables and"\
+                "executing $POST_HOOK_PATH"
+        export DEVICES DIGITIZER_GREP ORIENTATION ROTATION COORDS
+        "$POST_HOOK_PATH"
+    else
+        >&2 echo "W: Post rotate script exists at $POST_HOOK_PATH, but it is not executable. This"\
+            "seems to be a mistake."
+    fi
+else
+    [ "$VERBOSE" -eq 1 ] && >&2 echo "No post-rotate hook found"
+fi
